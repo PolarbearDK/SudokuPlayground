@@ -1,27 +1,172 @@
-# SudokuPlayground
+# Sample repository setting up new Angular application with ESLint + Prettier - PolarbearDK style
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 14.1.0.
+### Install [Angular CLI](https://angular.io/cli)
 
-## Development server
+`npm install -g @angular/cli`
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+### Create Angular project
 
-## Code scaffolding
+`ng new <applicationName> <options>`
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+Example:
+`ng new SudokuPlayground --strict --style=scss --routing`
 
-## Build
+### Install [Angular ESLint](https://github.com/angular-eslint/angular-eslint) (must be run from Angular application folder)
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+`ng add @angular-eslint/schematics`
 
-## Running unit tests
+### Install [prettier](https://github.com/prettier/prettier), [prettier-eslint](https://github.com/prettier/prettier-eslint), [eslint-config-prettier](https://github.com/prettier/eslint-config-prettier), [eslint-plugin-prettier](https://github.com/prettier/eslint-plugin-prettier) and [eslint-plugin-simple-import-sort](https://github.com/lydell/eslint-plugin-simple-import-sort)
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+`npm install prettier prettier-eslint eslint-config-prettier eslint-plugin-prettier eslint-plugin-simple-import-sort --save-dev`
 
-## Running end-to-end tests
+### ESLint configuration
 
-Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+Filename: `.eslintrc.json`
 
-## Further help
+```json
+// https://github.com/angular-eslint/angular-eslint#notes-for-eslint-plugin-prettier-users
+{
+  "root": true,
+  "ignorePatterns": ["projects/**/*"],
+  "overrides": [
+    {
+      "files": ["*.ts"],
+      "parserOptions": {
+        "project": ["tsconfig.json", "e2e/tsconfig.json"],
+        "createDefaultProgram": true
+      },
+      "extends": [
+        "eslint:recommended",
+        "plugin:@typescript-eslint/recommended",
+        "plugin:@angular-eslint/recommended",
+        "plugin:@angular-eslint/template/process-inline-templates",
+        "plugin:prettier/recommended"
+      ],
+      "plugins": ["simple-import-sort"],
+      "rules": {
+        "@typescript-eslint/member-ordering": 0,
+        "@typescript-eslint/naming-convention": 0,
+        "prettier/prettier": [
+          "error",
+          {
+            "endOfLine": "auto"
+          }
+        ],
+        "@angular-eslint/directive-selector": [
+          "error",
+          {
+            "type": "attribute",
+            "prefix": "app",
+            "style": "camelCase"
+          }
+        ],
+        "@angular-eslint/component-selector": [
+          "error",
+          {
+            "type": "element",
+            "prefix": "app",
+            "style": "kebab-case"
+          }
+        ],
+        "arrow-parens": ["warn", "as-needed"],
+        "simple-import-sort/exports": "error",
+        "simple-import-sort/imports": [
+          "error",
+          {
+            "groups": [
+              // Side effect imports.
+              ["^\\u0000"],
+              // Packages.
+              // Things that start with a letter (or digit or underscore), or `@` followed by a letter.
+              ["^@?\\w"],
+              // Absolute imports and other imports such as Vue-style `@/foo`.
+              // Anything not matched in another group.
+              ["^"],
+              // Relative imports.
+              // Anything that starts with a dot.
+              ["^\\.", "^src/"]
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["*.html"],
+      "extends": ["plugin:@angular-eslint/template/recommended"],
+      "rules": {}
+    }
+  ]
+}
+```
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+### Prettier Configuration
+
+Filename: `.prettierrc`
+
+```json
+{
+  "tabWidth": 2,
+  "useTabs": false,
+  "singleQuote": true,
+  "semi": true,
+  "bracketSpacing": true,
+  "arrowParens": "avoid",
+  "trailingComma": "es5",
+  "bracketSameLine": true,
+  "printWidth": 160
+}
+```
+
+Filename: `.prettierignore`
+
+```
+.angular
+build
+coverage
+e2e
+node_modules
+```
+
+### VSCode <applicationname>.code-workspace
+
+```json
+{
+  "folders": [
+    {
+      "path": "."
+    }
+  ],
+  "settings": {
+    "[html]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode",
+      "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": true
+      },
+      "editor.formatOnSave": false
+    },
+    "[typescript]": {
+      "editor.defaultFormatter": "dbaeumer.vscode-eslint",
+      "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": true
+      },
+      "editor.formatOnSave": false
+    }
+  },
+  "extensions": {
+    "recommendations": [
+      "esbenp.prettier-vscode",
+      "dbaeumer.vscode-eslint",
+      "Angular.ng-template",
+      // Optional extensions
+      "cyrilletuzi.angular-schematics",
+      "adrianwilczynski.switcher",
+      "ChakrounAnas.turbo-console-log",
+      "ghaschel.vscode-angular-html"
+    ]
+  }
+}
+```
+
+### Add Fix Lint and Prettier errors command in package.json
+
+`"lint": "ng lint --fix"`

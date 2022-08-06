@@ -1,0 +1,16 @@
+<input
+  #input
+  *ngIf="cell"
+  type="number"
+  class="cell"
+  [class.invalid]="cell.invalid"
+  [class.obvious]="!cell.value && cell.possibleValues?.length === 1"
+  [class.derived]="!!cell.suggestedValue"
+  [(ngModel)]="cell.value"
+  (ngModelChange)="onCellChange()"
+  [readonly]="cell.locked ?? false"
+  [title]="getTitle(cell)"
+  (keydown)="onKeyDown($event)"
+  min="1"
+  max="9"
+/>

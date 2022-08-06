@@ -1,0 +1,20 @@
+table.board {
+  spacing: 0;
+  padding: 0;
+  border-spacing: 0;
+  border-collapse: collapse;
+  border: 4px solid black;
+
+  td {
+    border: 1px solid black;
+    padding: 0;
+  }
+  tr.row3 td,
+  tr.row6 td {
+    border-top: 4px solid black;
+  }
+  td.col3,
+  td.col6 {
+    border-left: 4px solid black;
+  }
+}

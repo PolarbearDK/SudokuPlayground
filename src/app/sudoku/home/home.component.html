@@ -1,0 +1,12 @@
+<app-board
+  [board]="board"
+  [boardSize]="boardSize"
+  (boardChange)="onCheck()"
+></app-board>
+<button *ngIf="locked" (click)="onNew()">New</button>
+<button (click)="onReset()">Reset</button>
+<button *ngIf="!locked" (click)="onLock()">Lock</button>
+<button (click)="onLoad()">Load</button>
+<button *ngIf="locked" (click)="onSave()">Save</button>
+
+<pre>{{ board | json }}</pre>

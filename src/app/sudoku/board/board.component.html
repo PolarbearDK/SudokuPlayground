@@ -1,0 +1,15 @@
+<form>
+  <table class="board">
+    <tr *ngFor="let row of board; let rowIdx = index" class="row{{ rowIdx }}">
+      <td *ngFor="let col of row; let colIdx = index" class="col{{ colIdx }}">
+        <app-cell
+          [cell]="col"
+          [row]="rowIdx"
+          [col]="colIdx"
+          (cellChange)="onBoardChange()"
+          (navigate)="onNavigate($event)"
+        ></app-cell>
+      </td>
+    </tr>
+  </table>
+</form>

@@ -50,7 +50,7 @@ export class CellComponent {
   }
 
   getTitle(cell: BoardCell) {
-    const { possibleValues, suggestedValue } = cell;
+    const { possibleValues, determinedValue: suggestedValue } = cell;
     if (!possibleValues) return '';
     if (possibleValues.length === 1) return possibleValues[0].toString();
 

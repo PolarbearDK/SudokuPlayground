@@ -1,4 +1,4 @@
-import { BoardCell } from './board.model';
+import { BoardCell, BoardDimensions, getBoardSize, getSetSize } from './board.model';
 
 interface CellRef {
   row: number;
@@ -6,32 +6,40 @@ interface CellRef {
 }
 
 interface SaveFormat {
-  boxSize: number;
+  boxSize?: number;
+  dimensions?: BoardDimensions;
   board: (Pick<BoardCell, 'value' | 'locked'> | undefined)[][];
 }
 
-const saveKey = 'board2';
+const saveKey = 'board23';
 
 export class BoardService {
-  public boxSize: number;
+  public dimensions: BoardDimensions;
   public board: BoardCell[][];
   public groups: CellRef[][];
+  public solved = false;
 
-  constructor(boxSize: number) {
-    this.boxSize = boxSize;
-    this.board = createBoard(getBoardSize(boxSize));
+  constructor() {
+    this.dimensions = {
+      boxWidth: 3,
+      boxHeight: 2,
+      boxesX: 2,
+      boxesY: 3,
+    };
+    this.board = createBoard(this.dimensions);
     this.groups = this.createGroups();
+    this.solved = false;
   }
 
   createGroups(): CellRef[][] {
-    const { boxSize } = this;
-    const boardSize = getBoardSize(boxSize);
+    const { dimensions } = this;
+    const { width, height } = getBoardSize(dimensions);
     const groups: CellRef[][] = [];
 
     // Group per row
-    for (let row = 0; row < boardSize; row++) {
+    for (let row = 0; row < height; row++) {
       const group: CellRef[] = [];
-      for (let col = 0; col < boardSize; col++) {
+      for (let col = 0; col < width; col++) {
         group.push({
           row,
           col,
@@ -41,9 +49,9 @@ export class BoardService {
     }
 
     // Group per col
-    for (let col = 0; col < boardSize; col++) {
+    for (let col = 0; col < width; col++) {
       const group: CellRef[] = [];
-      for (let row = 0; row < boardSize; row++) {
+      for (let row = 0; row < width; row++) {
         group.push({
           row,
           col,
@@ -53,14 +61,14 @@ export class BoardService {
     }
 
     // Group per box
-    for (let boxRow = 0; boxRow < boxSize; boxRow++) {
-      for (let boxCol = 0; boxCol < boxSize; boxCol++) {
+    for (let boxY = 0; boxY < dimensions.boxesY; boxY++) {
+      for (let boxX = 0; boxX < dimensions.boxesX; boxX++) {
         const group: CellRef[] = [];
-        for (let offsetRow = 0; offsetRow < boxSize; offsetRow++) {
-          for (let offsetCol = 0; offsetCol < boxSize; offsetCol++) {
+        for (let offsetRow = 0; offsetRow < dimensions.boxHeight; offsetRow++) {
+          for (let offsetCol = 0; offsetCol < dimensions.boxWidth; offsetCol++) {
             group.push({
-              row: boxRow * boxSize + offsetRow,
-              col: boxCol * boxSize + offsetCol,
+              row: boxY * dimensions.boxHeight + offsetRow,
+              col: boxX * dimensions.boxWidth + offsetCol,
             });
           }
         }
@@ -71,8 +79,11 @@ export class BoardService {
     return groups;
   }
 
-  clear() {
-    this.board = createBoard(getBoardSize(this.boxSize));
+  clear(dimensions: BoardDimensions) {
+    this.dimensions = { ...dimensions };
+    this.board = createBoard(this.dimensions);
+    this.groups = this.createGroups();
+    this.solved = false;
   }
 
   lock() {
@@ -91,8 +102,8 @@ export class BoardService {
   }
 
   save() {
-    const { boxSize } = this;
-    const board: (Pick<BoardCell, 'value' | 'locked'> | undefined)[][] = Array.from({ length: getBoardSize(boxSize) }, () => []);
+    const { dimensions } = this;
+    const board: (Pick<BoardCell, 'value' | 'locked'> | undefined)[][] = Array.from({ length: getBoardSize(dimensions).height }, () => []);
 
     this.forEachCell((cell, row, col) => {
       const { value, locked } = cell;
@@ -100,7 +111,7 @@ export class BoardService {
     });
 
     const toSave: SaveFormat = {
-      boxSize,
+      dimensions,
       board,
     };
     localStorage.setItem(saveKey, JSON.stringify(toSave));
@@ -110,10 +121,17 @@ export class BoardService {
     const str = localStorage.getItem(saveKey);
     if (str) {
       const saveFormat = JSON.parse(str) as SaveFormat;
-      if (saveFormat && saveFormat.board && saveFormat.boxSize) {
-        const { board, boxSize } = saveFormat;
-        this.boxSize = boxSize;
-        this.board = createBoard(getBoardSize(boxSize));
+      if (saveFormat && saveFormat.board) {
+        const { board, boxSize = 3, dimensions } = saveFormat;
+        this.dimensions = dimensions ?? {
+          boxWidth: boxSize,
+          boxHeight: boxSize,
+          boxesX: boxSize,
+          boxesY: boxSize,
+        };
+
+        this.board = createBoard(this.dimensions);
+        this.createGroups();
         this.forEachCell((cell, row, col) => {
           const savedCell = board[row][col];
           if (savedCell) {
@@ -156,11 +174,11 @@ export class BoardService {
   }
 
   check() {
-    const boardSize = getBoardSize(this.boxSize);
+    const setSize = getSetSize(this.dimensions);
 
     this.forEachCell(cell => {
-      cell.possibleValues = cell.value ? [cell.value] : Array.from({ length: boardSize }, (_, i) => i + 1);
-      cell.suggestedValue = undefined;
+      cell.possibleValues = cell.value ? [cell.value] : Array.from({ length: setSize }, (_, i) => i + 1);
+      cell.determinedValue = undefined;
     });
 
     // Eliminate selected values from other members of group
@@ -178,45 +196,46 @@ export class BoardService {
     // Find single cells in group that has unique value
     for (const group of this.groups) {
       const cells = this.getGroupCells(group);
-      const max = getBoardSize(this.boxSize);
-      for (let i = 1; i <= max; i++) {
+      for (let i = 1; i <= setSize; i++) {
         if (!cells.some(x => x.value == i)) {
           const possibleCells = cells.filter(x => x.possibleValues?.includes(i));
           if (possibleCells.length === 1) {
             if (possibleCells[0].possibleValues?.length !== 1) {
-              possibleCells[0].suggestedValue = i;
+              possibleCells[0].determinedValue = i;
             }
           }
         }
       }
     }
 
+    let solved = true;
     this.forEachCell(cell => {
-      cell.invalid = (!!cell.value && !cell.possibleValues?.includes(cell.value)) || cell.possibleValues?.length === 0;
+      cell.invalid = (!!cell.value && (cell.value > setSize || !cell.possibleValues?.includes(cell.value))) || cell.possibleValues?.length === 0;
+      if (!cell.value || cell.invalid) {
+        solved = false;
+      }
     });
+    this.solved = solved;
   }
 
   private forEachCell(action: (cell: BoardCell, row: number, col: number) => void) {
     const { board } = this;
-    const boardSize = getBoardSize(this.boxSize);
+    const { width, height } = getBoardSize(this.dimensions);
 
-    for (let row = 0; row < boardSize; row++) {
-      for (let col = 0; col < boardSize; col++) {
+    for (let row = 0; row < height; row++) {
+      for (let col = 0; col < width; col++) {
         action(board[row][col], row, col);
       }
     }
   }
 }
 
-export function getBoardSize(boxSize: number) {
-  return boxSize * boxSize;
-}
-
-function createBoard(size: number): BoardCell[][] {
+function createBoard(dimensions: BoardDimensions): BoardCell[][] {
   const board: BoardCell[][] = [];
-  for (let r = 0; r < size; r++) {
+  const { width, height } = getBoardSize(dimensions);
+  for (let r = 0; r < height; r++) {
     const row: BoardCell[] = [];
-    for (let c = 0; c < size; c++) {
+    for (let c = 0; c < width; c++) {
       row[c] = {};
     }
     board[r] = row;

@@ -5,7 +5,7 @@
   class="cell"
   [class.invalid]="cell.invalid"
   [class.obvious]="!cell.value && cell.possibleValues?.length === 1"
-  [class.derived]="!!cell.suggestedValue"
+  [class.determined]="!!cell.determinedValue"
   [(ngModel)]="cell.value"
   (ngModelChange)="onCellChange()"
   [readonly]="cell.locked ?? false"

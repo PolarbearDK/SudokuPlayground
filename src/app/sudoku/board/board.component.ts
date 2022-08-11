@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, Output, QueryList, ViewChildren } from '@angular/core';
 
 import { CellComponent } from '../cell/cell.component';
-import { BoardCell } from './board.model';
+import { BoardCell, BoardDimensions, getBoardSize } from './board.model';
 
 @Component({
   selector: 'app-board',
@@ -10,7 +10,7 @@ import { BoardCell } from './board.model';
 })
 export class BoardComponent {
   @Input() board?: BoardCell[][];
-  @Input() boardSize?: number;
+  @Input() dimensions?: BoardDimensions;
   @Output() boardChange = new EventEmitter();
 
   @ViewChildren(CellComponent) cells?: QueryList<CellComponent>;
@@ -20,16 +20,18 @@ export class BoardComponent {
   }
 
   onNavigate($event: { row: number; col: number }) {
-    const { cells, boardSize } = this;
+    const { cells, dimensions } = this;
     let { row, col } = $event;
 
-    if (cells && boardSize) {
-      if (row < 0) row = boardSize - 1;
-      if (row >= boardSize) row = 0;
-      if (col < 0) col = boardSize - 1;
-      if (col >= boardSize) col = 0;
+    if (cells && dimensions) {
+      const { width, height } = getBoardSize(dimensions);
 
-      const cell = cells.toArray()[row * 9 + col];
+      if (row < 0) row = height - 1;
+      if (row >= height) row = 0;
+      if (col < 0) col = width - 1;
+      if (col >= width) col = 0;
+
+      const cell = cells.toArray()[row * width + col];
       cell.focus();
     }
   }

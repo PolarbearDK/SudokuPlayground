@@ -1,5 +1,5 @@
 <form>
-  <table class="board">
+  <table class="board rows{{dimensions?.boxHeight}} cols{{dimensions?.boxWidth}}">
     <tr *ngFor="let row of board; let rowIdx = index" class="row{{ rowIdx }}">
       <td *ngFor="let col of row; let colIdx = index" class="col{{ colIdx }}">
         <app-cell

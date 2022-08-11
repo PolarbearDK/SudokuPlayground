@@ -1,12 +1,21 @@
-<app-board
+
+
+<app-board 
+  [class.solved]="solved"
   [board]="board"
-  [boardSize]="boardSize"
+  [dimensions]="dimensions"
   (boardChange)="onCheck()"
 ></app-board>
-<button *ngIf="locked" (click)="onNew()">New</button>
+<div class="button bar">
+  <button *ngIf="!locked" (click)="onNew()">Generate</button>
+  <input  *ngIf="!locked" type="number" min="2" max="4" [(ngModel)]="newDimensions.boxWidth" />
+  <input  *ngIf="!locked" type="number" min="2" max="4" [(ngModel)]="newDimensions.boxHeight" />
+  <input  *ngIf="!locked" type="number" min="2" max="4" [(ngModel)]="newDimensions.boxesX" />
+  <input  *ngIf="!locked" type="number" min="2" max="4" [(ngModel)]="newDimensions.boxesY" />
 <button (click)="onReset()">Reset</button>
 <button *ngIf="!locked" (click)="onLock()">Lock</button>
+<button *ngIf="locked" (click)="onEdit()">Edit</button>
 <button (click)="onLoad()">Load</button>
 <button *ngIf="locked" (click)="onSave()">Save</button>
-
+</div>
 <pre>{{ board | json }}</pre>

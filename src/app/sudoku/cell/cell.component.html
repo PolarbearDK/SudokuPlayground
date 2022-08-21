@@ -6,6 +6,7 @@
   [class.invalid]="cell.invalid"
   [class.obvious]="!cell.value && cell.possibleValues?.length === 1"
   [class.determined]="!!cell.determinedValue"
+  [class.cross]="isCross"
   [(ngModel)]="cell.value"
   (ngModelChange)="onCellChange()"
   [readonly]="cell.locked ?? false"

@@ -10,6 +10,10 @@ input.cell {
   margin: 0;
 }
 
+input.determined {
+  background-color: #b5a;
+}
+
 input:read-only {
   background-color: #ccc;
   color: black;
@@ -36,6 +40,6 @@ input::-webkit-inner-spin-button {
 }
 
 /* Firefox */
-input[type="number"] {
+input[type='number'] {
   -moz-appearance: textfield;
 }

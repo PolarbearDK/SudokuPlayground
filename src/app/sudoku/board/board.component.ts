@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, QueryList, ViewChildren } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, Output, QueryList, SimpleChanges, ViewChildren } from '@angular/core';
 
 import { CellComponent } from '../cell/cell.component';
 import { BoardCell, BoardDimensions, getBoardSize } from './board.model';
@@ -8,13 +8,20 @@ import { BoardCell, BoardDimensions, getBoardSize } from './board.model';
   templateUrl: './board.component.html',
   styleUrls: ['./board.component.scss'],
 })
-export class BoardComponent implements {
+export class BoardComponent implements OnChanges {
   @Input() board?: BoardCell[][];
-  @Input() isCross = false;
   @Input() dimensions?: BoardDimensions;
+  @Input() isCross?: boolean;
   @Output() boardChange = new EventEmitter();
 
   @ViewChildren(CellComponent) cells?: QueryList<CellComponent>;
+  size = 0;
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if ('dimensions' in changes) {
+      this.size = this.dimensions ? getBoardSize(this.dimensions).width : 0;
+    }
+  }
 
   onBoardChange() {
     this.boardChange.emit();

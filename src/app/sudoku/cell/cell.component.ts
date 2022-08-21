@@ -11,6 +11,7 @@ export class CellComponent {
   @Input() cell?: BoardCell;
   @Input() row?: number;
   @Input() col?: number;
+  @Input() isCross?: boolean;
   @Output() cellChange = new EventEmitter();
   @Output() navigate = new EventEmitter<{ row: number; col: number }>();
 

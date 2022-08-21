@@ -6,7 +6,7 @@
           [cell]="col"
           [row]="rowIdx"
           [col]="colIdx"
-          [cross]=""
+          [isCross]="isCross && rowIdx === colIdx"
           (cellChange)="onBoardChange()"
           (navigate)="onNavigate($event)"
         ></app-cell>

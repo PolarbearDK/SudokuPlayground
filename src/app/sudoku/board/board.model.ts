@@ -20,6 +20,11 @@ export function getBoardSize(dimensions: BoardDimensions) {
   };
 }
 
+export function isSqure(dimensions: BoardDimensions) {
+  const { width, height } = getBoardSize(dimensions);
+  return width === height;
+}
+
 export function getSetSize(dimensions: BoardDimensions) {
   return dimensions.boxWidth * dimensions.boxHeight;
 }

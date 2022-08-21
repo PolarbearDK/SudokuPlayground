@@ -1,4 +1,4 @@
-import { BoardCell, BoardDimensions, getBoardSize, getSetSize } from './board.model';
+import { BoardCell, BoardDimensions, getBoardSize, getSetSize, isSqure as isSqare } from './board.model';
 
 interface CellRef {
   row: number;
@@ -8,6 +8,7 @@ interface CellRef {
 interface SaveFormat {
   boxSize?: number;
   dimensions?: BoardDimensions;
+  isCross?: boolean;
   board: (Pick<BoardCell, 'value' | 'locked'> | undefined)[][];
 }
 
@@ -15,6 +16,7 @@ const lastSaveKey = '$$lastSave';
 
 export class BoardService {
   public dimensions: BoardDimensions;
+  public isCross: boolean;
   public board: BoardCell[][];
   public groups: CellRef[][];
   public solved = false;
@@ -26,15 +28,17 @@ export class BoardService {
       boxesX: 2,
       boxesY: 3,
     };
+    this.isCross = false;
     this.board = createBoard(this.dimensions);
-    this.groups = createGroups(this.dimensions);
+    this.groups = createGroups(this.dimensions, this.isCross);
     this.solved = false;
   }
 
-  clear(dimensions: BoardDimensions) {
+  create(dimensions: BoardDimensions, isCross: boolean) {
     this.dimensions = { ...dimensions };
+    this.isCross = isCross && isSqare(dimensions);
     this.board = createBoard(this.dimensions);
-    this.groups = createGroups(this.dimensions);
+    this.groups = createGroups(this.dimensions, this.isCross);
     this.solved = false;
   }
 
@@ -62,7 +66,7 @@ export class BoardService {
   }
 
   save(saveKey: string) {
-    const { dimensions } = this;
+    const { dimensions, isCross } = this;
     const board: (Pick<BoardCell, 'value' | 'locked'> | undefined)[][] = Array.from({ length: getBoardSize(dimensions).height }, () => []);
 
     this.forEachCell((cell, row, col) => {
@@ -72,6 +76,7 @@ export class BoardService {
 
     const toSave: SaveFormat = {
       dimensions,
+      isCross: isCross || undefined,
       board,
     };
     localStorage.setItem(saveKey, JSON.stringify(toSave));
@@ -83,16 +88,17 @@ export class BoardService {
     if (str) {
       const saveFormat = JSON.parse(str) as SaveFormat;
       if (saveFormat && saveFormat.board) {
-        const { board, boxSize = 3, dimensions } = saveFormat;
+        const { board, boxSize = 3, dimensions, isCross } = saveFormat;
         this.dimensions = dimensions ?? {
           boxWidth: boxSize,
           boxHeight: boxSize,
           boxesX: boxSize,
           boxesY: boxSize,
         };
+        this.isCross = isCross ?? false;
 
         this.board = createBoard(this.dimensions);
-        this.groups = createGroups(this.dimensions);
+        this.groups = createGroups(this.dimensions, this.isCross);
         this.forEachCell((cell, row, col) => {
           const savedCell = board[row][col];
           if (savedCell) {
@@ -113,6 +119,10 @@ export class BoardService {
 
   public getLastSaveKey(): string {
     return localStorage.getItem(lastSaveKey) ?? new Date().toUTCString();
+  }
+
+  public setIsCross(isCross: boolean) {
+    this.isCross = isCross && isSqare(this.dimensions);
   }
 
   private forEachCellInGroup(group: CellRef[], action: (cell1: BoardCell, cell2: BoardCell) => void) {
@@ -208,7 +218,7 @@ function createBoard(dimensions: BoardDimensions): BoardCell[][] {
   return board;
 }
 
-function createGroups(dimensions: BoardDimensions): CellRef[][] {
+function createGroups(dimensions: BoardDimensions, isCross: boolean): CellRef[][] {
   const { width, height } = getBoardSize(dimensions);
   const groups: CellRef[][] = [];
 
@@ -250,6 +260,20 @@ function createGroups(dimensions: BoardDimensions): CellRef[][] {
       }
       groups.push(group);
     }
+  }
+
+  // X groups?
+  if (isCross && isSqare(dimensions)) {
+    const group1: CellRef[] = [];
+    const group2: CellRef[] = [];
+
+    for (let x = 0; x < height; x++) {
+      group1.push({ row: x, col: x });
+      group2.push({ row: height - x - 1, col: x });
+    }
+
+    groups.push(group1);
+    groups.push(group2);
   }
 
   return groups;

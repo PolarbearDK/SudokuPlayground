@@ -1,4 +1,4 @@
-<app-board [class.solved]="solved" [board]="board" [dimensions]="dimensions" (boardChange)="onCheck()"></app-board>
+<app-board [class.solved]="solved" [board]="board" [dimensions]="dimensions" [isCross]="isCross" (boardChange)="onCheck()"></app-board>
 <div class="button bar">
   <button (click)="onReset()">Reset</button>
   <button *ngIf="locked" (click)="onEdit()">Edit</button>
@@ -9,11 +9,12 @@
   <button *ngIf="locked" (click)="onSave()">Save</button>
 </div>
 <div *ngIf="!locked" class="dimensions">
-  <label>Box width<input type="number" min="2" max="4" [(ngModel)]="newDimensions.boxWidth" /></label>
-  <label># of boxes horizontally<input type="number" min="2" max="4" [(ngModel)]="newDimensions.boxesX" /></label>
+  <label>Box width<input type="number" min="2" max="4" [(ngModel)]="newDimensions.boxWidth" (ngModelChange)="onBoardDefinitionChange()"/></label>
+  <label># of boxes horizontally<input type="number" min="2" max="4" [(ngModel)]="newDimensions.boxesX" (ngModelChange)="onBoardDefinitionChange()"/></label>
 
-  <label>Box height<input type="number" min="2" max="4" [(ngModel)]="newDimensions.boxHeight" /></label>
-  <label># of boxes vertically<input type="number" min="2" max="4" [(ngModel)]="newDimensions.boxesY" /></label>
+  <label>Box height<input type="number" min="2" max="4" [(ngModel)]="newDimensions.boxHeight" (ngModelChange)="onBoardDefinitionChange()"/></label>
+  <label># of boxes vertically<input type="number" min="2" max="4" [(ngModel)]="newDimensions.boxesY" (ngModelChange)="onBoardDefinitionChange()" /></label>
+  <label *ngIf="isSqare"><input type="checkbox" [(ngModel)]="isCross">Is Cross</label>
   <button (click)="onNew()">Generate</button>
   <button (click)="onLock()">Lock</button>
 </div>

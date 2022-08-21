@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 
-import { BoardDimensions } from '../board/board.model';
+import { BoardDimensions, isSqure } from '../board/board.model';
 import { BoardService } from '../board/board.service';
 
 @Component({
@@ -14,6 +14,7 @@ export class HomeComponent implements OnInit {
   public saveKey: string;
 
   locked = false;
+  isSqare = false;
 
   constructor() {
     this.boardService = new BoardService();
@@ -28,6 +29,15 @@ export class HomeComponent implements OnInit {
     return this.boardService.dimensions;
   }
 
+  private _isCross = false;
+  get isCross(): boolean {
+    return this.boardService.isCross;
+  }
+  set isCross(value: boolean) {
+    this._isCross = value;
+    this.boardService.setIsCross(value);
+  }
+
   get solved(): boolean {
     return this.boardService.solved;
   }
@@ -36,8 +46,12 @@ export class HomeComponent implements OnInit {
     this.onLoad();
   }
 
+  onBoardDefinitionChange() {
+    this.isSqare = isSqure(this.newDimensions);
+  }
+
   onNew() {
-    this.boardService.clear(this.newDimensions);
+    this.boardService.create(this.newDimensions, this._isCross);
     this.locked = false;
   }
 
@@ -59,6 +73,8 @@ export class HomeComponent implements OnInit {
     if (this.boardService.load(this.saveKey)) {
       this.locked = this.boardService.isLocked();
       this.newDimensions = { ...this.boardService.dimensions };
+      this.isCross = this.boardService.isCross;
+      this.onBoardDefinitionChange();
     }
   }
 

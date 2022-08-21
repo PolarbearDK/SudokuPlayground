@@ -9,11 +9,15 @@ import { BoardService } from '../board/board.service';
   styleUrls: ['./home.component.scss'],
 })
 export class HomeComponent implements OnInit {
-  public boardService = new BoardService();
+  public boardService: BoardService;
   public newDimensions: BoardDimensions;
+  public saveKey: string;
+
   locked = false;
 
   constructor() {
+    this.boardService = new BoardService();
+    this.saveKey = this.boardService.getLastSaveKey();
     this.newDimensions = { ...this.boardService.dimensions };
   }
   get board() {
@@ -52,14 +56,14 @@ export class HomeComponent implements OnInit {
   }
 
   onLoad() {
-    if (this.boardService.load()) {
+    if (this.boardService.load(this.saveKey)) {
+      this.locked = this.boardService.isLocked();
       this.newDimensions = { ...this.boardService.dimensions };
-      this.locked = true;
     }
   }
 
   onSave() {
-    this.boardService.save();
+    this.boardService.save(this.saveKey);
   }
 
   onCheck() {

@@ -11,7 +11,7 @@ interface SaveFormat {
   board: (Pick<BoardCell, 'value' | 'locked'> | undefined)[][];
 }
 
-const saveKey = 'board23';
+const lastSaveKey = '$$lastSave';
 
 export class BoardService {
   public dimensions: BoardDimensions;
@@ -27,62 +27,14 @@ export class BoardService {
       boxesY: 3,
     };
     this.board = createBoard(this.dimensions);
-    this.groups = this.createGroups();
+    this.groups = createGroups(this.dimensions);
     this.solved = false;
-  }
-
-  createGroups(): CellRef[][] {
-    const { dimensions } = this;
-    const { width, height } = getBoardSize(dimensions);
-    const groups: CellRef[][] = [];
-
-    // Group per row
-    for (let row = 0; row < height; row++) {
-      const group: CellRef[] = [];
-      for (let col = 0; col < width; col++) {
-        group.push({
-          row,
-          col,
-        });
-      }
-      groups.push(group);
-    }
-
-    // Group per col
-    for (let col = 0; col < width; col++) {
-      const group: CellRef[] = [];
-      for (let row = 0; row < width; row++) {
-        group.push({
-          row,
-          col,
-        });
-      }
-      groups.push(group);
-    }
-
-    // Group per box
-    for (let boxY = 0; boxY < dimensions.boxesY; boxY++) {
-      for (let boxX = 0; boxX < dimensions.boxesX; boxX++) {
-        const group: CellRef[] = [];
-        for (let offsetRow = 0; offsetRow < dimensions.boxHeight; offsetRow++) {
-          for (let offsetCol = 0; offsetCol < dimensions.boxWidth; offsetCol++) {
-            group.push({
-              row: boxY * dimensions.boxHeight + offsetRow,
-              col: boxX * dimensions.boxWidth + offsetCol,
-            });
-          }
-        }
-        groups.push(group);
-      }
-    }
-
-    return groups;
   }
 
   clear(dimensions: BoardDimensions) {
     this.dimensions = { ...dimensions };
     this.board = createBoard(this.dimensions);
-    this.groups = this.createGroups();
+    this.groups = createGroups(this.dimensions);
     this.solved = false;
   }
 
@@ -94,6 +46,14 @@ export class BoardService {
     this.forEachCell(cell => (cell.locked = false));
   }
 
+  isLocked(): boolean {
+    let locked = false;
+    this.forEachCell(cell => {
+      if (cell.locked) locked = true;
+    });
+    return locked;
+  }
+
   reset() {
     this.forEachCell(cell => {
       if (!cell.locked) cell.value = undefined;
@@ -101,7 +61,7 @@ export class BoardService {
     this.check();
   }
 
-  save() {
+  save(saveKey: string) {
     const { dimensions } = this;
     const board: (Pick<BoardCell, 'value' | 'locked'> | undefined)[][] = Array.from({ length: getBoardSize(dimensions).height }, () => []);
 
@@ -115,9 +75,10 @@ export class BoardService {
       board,
     };
     localStorage.setItem(saveKey, JSON.stringify(toSave));
+    localStorage.setItem(lastSaveKey, saveKey);
   }
 
-  load() {
+  load(saveKey: string) {
     const str = localStorage.getItem(saveKey);
     if (str) {
       const saveFormat = JSON.parse(str) as SaveFormat;
@@ -131,7 +92,7 @@ export class BoardService {
         };
 
         this.board = createBoard(this.dimensions);
-        this.createGroups();
+        this.groups = createGroups(this.dimensions);
         this.forEachCell((cell, row, col) => {
           const savedCell = board[row][col];
           if (savedCell) {
@@ -148,6 +109,10 @@ export class BoardService {
       }
     }
     return false;
+  }
+
+  public getLastSaveKey(): string {
+    return localStorage.getItem(lastSaveKey) ?? new Date().toUTCString();
   }
 
   private forEachCellInGroup(group: CellRef[], action: (cell1: BoardCell, cell2: BoardCell) => void) {
@@ -241,4 +206,51 @@ function createBoard(dimensions: BoardDimensions): BoardCell[][] {
     board[r] = row;
   }
   return board;
+}
+
+function createGroups(dimensions: BoardDimensions): CellRef[][] {
+  const { width, height } = getBoardSize(dimensions);
+  const groups: CellRef[][] = [];
+
+  // Group per row
+  for (let row = 0; row < height; row++) {
+    const group: CellRef[] = [];
+    for (let col = 0; col < width; col++) {
+      group.push({
+        row,
+        col,
+      });
+    }
+    groups.push(group);
+  }
+
+  // Group per col
+  for (let col = 0; col < width; col++) {
+    const group: CellRef[] = [];
+    for (let row = 0; row < width; row++) {
+      group.push({
+        row,
+        col,
+      });
+    }
+    groups.push(group);
+  }
+
+  // Group per box
+  for (let boxY = 0; boxY < dimensions.boxesY; boxY++) {
+    for (let boxX = 0; boxX < dimensions.boxesX; boxX++) {
+      const group: CellRef[] = [];
+      for (let offsetRow = 0; offsetRow < dimensions.boxHeight; offsetRow++) {
+        for (let offsetCol = 0; offsetCol < dimensions.boxWidth; offsetCol++) {
+          group.push({
+            row: boxY * dimensions.boxHeight + offsetRow,
+            col: boxX * dimensions.boxWidth + offsetCol,
+          });
+        }
+      }
+      groups.push(group);
+    }
+  }
+
+  return groups;
 }
